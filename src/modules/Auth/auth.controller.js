@@ -5,7 +5,7 @@ import { sendEmail } from "../../services/sendEmail.js";
 import { customAlphabet } from "nanoid";
 
 export const signup = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
   const user = await userModel.findOne({ email });
   if (user) {
     return next(new Error("email is already exist", { cause: 409 }));
@@ -238,6 +238,7 @@ export const signup = async (req, res, next) => {
     name,
     email,
     password: hashPassword,
+    role,
   });
   return res.status(200).json({ message: "success", create });
 };
@@ -295,17 +296,17 @@ export const signin = async (req, res, next) => {
 };
 //----------------------------------------------------------------------------------------
 export const sendCode = async (req, res, next) => {
-    const { email } = req.body;
-    let code = customAlphabet('123456ABCDZ', 4);
-    code = code();
-    const user = await userModel.findOneAndUpdate(
-      { email },
-      { sendCode: code },
-      { new: true },
-    );
-    const html = `<h2> code is : ${code} </h2>`;
-    await sendEmail(email, `resetPassword`, html);
-    return res.status(200).json({ message: 'success', user });
+  const { email } = req.body;
+  let code = customAlphabet("123456ABCDZ", 4);
+  code = code();
+  const user = await userModel.findOneAndUpdate(
+    { email },
+    { sendCode: code },
+    { new: true }
+  );
+  const html = `<h2> code is : ${code} </h2>`;
+  await sendEmail(email, `resetPassword`, html);
+  return res.status(200).json({ message: "success", user });
 };
 //-----------------------------------------------------------------------------
 export const forgetPassword = async (req, res, next) => {

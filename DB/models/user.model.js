@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, model } from "mongoose";
 const userSchema = new Schema(
   {
@@ -40,9 +41,8 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      default: "Patient",
       enum: ["Doctor", "Patient"],
-      required:true,
+      required: true,
     },
     sendCode: {
       type: String,
@@ -50,6 +50,10 @@ const userSchema = new Schema(
     },
     changePasswordTime: {
       type: Date,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
