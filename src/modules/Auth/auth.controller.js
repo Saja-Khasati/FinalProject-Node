@@ -5,7 +5,8 @@ import { sendEmail } from "../../services/sendEmail.js";
 import { customAlphabet } from "nanoid";
 
 export const signup = async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, gender, age, phoneNumber, address, role } =
+    req.body;
   const user = await userModel.findOne({ email });
   if (user) {
     return next(new Error("email is already exist", { cause: 409 }));
@@ -238,6 +239,10 @@ export const signup = async (req, res, next) => {
     name,
     email,
     password: hashPassword,
+    gender,
+    age,
+    phoneNumber,
+    address,
     role,
   });
   return res.status(200).json({ message: "success", create });

@@ -1,10 +1,13 @@
 import userModel from "../../../DB/models/user.model.js";
+import { pagination } from "../../middleware/Pagination.js";
+import bcrypt from "bcryptjs";
 
 export const getDoctors = async (req, res, next) => {
-  const user = await userModel.find({ role: "Doctor" });
+  const { skip, limit } = pagination(req.query.page, req.query.limit);
+    const user = await userModel.find({ role: "Doctor" }).skip(skip).limit(limit);
   return res.json({ message: "All doctors", user });
 };
-
+//-----------------------------------------------------------------------------------------
 export const getSpecificDoctor = async (req, res, next) => {
   const { id } = req.params;
   const doctor = await userModel.findById(id);
@@ -16,12 +19,16 @@ export const getSpecificDoctor = async (req, res, next) => {
   }
   return next(new Error("user not doctor", { cause: 404 }));
 };
-
+//-----------------------------------------------------------------------------------------
 export const getPatients = async (req, res, next) => {
-  const user = await userModel.find({ role: "Patient" });
+  const { skip, limit } = pagination(req.query.page, req.query.limit);
+  const user = await userModel
+    .find({ role: "Patient" })
+    .skip(skip)
+    .limit(limit);
   return res.json({ message: "All Patirnts", user });
 };
-
+//-----------------------------------------------------------------------------------------
 export const getSpecificPatient = async (req, res, next) => {
   const { id } = req.params;
   const patient = await userModel.findById(id);
@@ -33,7 +40,7 @@ export const getSpecificPatient = async (req, res, next) => {
   }
   return next(new Error("user not patient", { cause: 404 }));
 };
-
+//-----------------------------------------------------------------------------------------
 export const softDelete = async (req, res, next) => {
   const { id } = req.params;
   const user = await userModel.findOneAndUpdate(
@@ -46,7 +53,7 @@ export const softDelete = async (req, res, next) => {
   }
   return next(new Error("can't delete this user", { cause: 400 }));
 };
-
+//-----------------------------------------------------------------------------------------
 export const hardDelete = async (req, res, next) => {
   const { id } = req.params;
   const user = await userModel.findOneAndDelete({ _id: id });
@@ -55,7 +62,7 @@ export const hardDelete = async (req, res, next) => {
   }
   return res.status(200).json({ message: "success" });
 };
-
+//-----------------------------------------------------------------------------------------
 export const restore = async (req, res) => {
   const { id } = req.params;
   const user = await userModel.findOneAndUpdate(
@@ -68,3 +75,20 @@ export const restore = async (req, res) => {
   }
   return res.status(200).json({ message: "success" });
 };
+//-----------------------------------------------------------------------------------------
+export const updatePassword = async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+  const user = await userModel.findById(req.user._id);
+  const match = bcrypt.compareSync(oldPassword, user.password); // مقارنة بين الباسوورد القديمة والباسوورد اللي في الداتا بيس
+
+  if (!match) {
+    return next(new Error("Invalid old password"));
+  }
+  const hashedPassword = bcrypt.hashSync(
+    newPassword,
+    parseInt(process.env.SALTROUND)
+  );
+  const updatePass = await userModel.updateOne({_id:req.user._id},{password:hashedPassword},{new:true});
+  return res.status(200).json({ message: "success",updatePass});
+};
+//-----------------------------------------------------------------------------------------

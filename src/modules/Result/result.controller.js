@@ -2,6 +2,7 @@ import resultModel from "../../../DB/models/result.model.js";
 import userModel from "../../../DB/models/user.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../../services/sendEmail.js";
+import { pagination } from "../../middleware/Pagination.js";
 
 export const addResult = async (req, res, next) => {
   const {
@@ -43,14 +44,26 @@ export const addResult = async (req, res, next) => {
 };
 //----------------------------------------------------------------------------
 export const getResult = async (req, res, next) => {
+  const { skip, limit } = pagination(req.query.page, req.query.limit);
   const ID = req.params.id;
   const results = await resultModel.findById(ID);
   if (!results) {
     return next(new Error("result not found", { cause: 404 }));
   }
-  const getR = await resultModel.find();
+  let queryObj= {...req.query};
+  const execQuery = ['page','limit','skip','sort'];
+  execQuery.map( (ele)=>{
+    delete queryObj[ele];
+  })
+  queryObj = JSON.stringify(queryObj);
+  queryObj = queryObj.replace(/\b(gt|gte|lt|lte|in|nin|eq|neq)\b/g,match => `$${match}`);
+  queryObj = JSON.parse(queryObj);
 
-  return res.status(201).json({ message: "success", getR });
+  const mongooseQuery =  resultModel.find(queryObj).limit(limit).skip(skip);
+  const getR = await mongooseQuery.sort(req.query.sort?.replaceAll(',',''));
+  const count = await resultModel.estimatedDocumentCount();
+
+  return res.status(201).json({ message: "success", count: getR.length ,total:count, page: getR.length , getR});
 };
 
 //-----------------------------------------------------------------------------

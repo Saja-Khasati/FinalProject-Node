@@ -1,4 +1,6 @@
 import mongoose, { Schema, model } from "mongoose";
+
+
 const bookingSchema = new Schema(
   {
     userId: {
@@ -22,6 +24,11 @@ const bookingSchema = new Schema(
       type: String,
       required: true,
     },
+
+    bookingTime:{
+      type:String,
+      required:true,
+    }
   },
   {
     timestamps: true,

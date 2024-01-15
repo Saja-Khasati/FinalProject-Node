@@ -1,7 +1,7 @@
 import bookingModel from "../../../DB/models/booking.model.js";
-import userModel from "../../../DB/models/user.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../../services/sendEmail.js";
+import { pagination } from "../../middleware/Pagination.js";
 
 //getting paticular user booking data
 export const getParticulerUser = async (req, res, next) => {
@@ -23,7 +23,7 @@ export const getParticulerUser = async (req, res, next) => {
 //--------------------------------------------------------------------------------------------
 //create new booking
 export const createBooking = async (req, res, next) => {
-  const { doctorId, userEmail, bookingDate, bookingSlot } = req.body;
+  const { doctorId, userEmail, bookingDate, bookingSlot, bookingTime } = req.body;
   let allBookings = await bookingModel.find({ doctorId });
 
   if (allBookings.length === 0) {
@@ -33,6 +33,7 @@ export const createBooking = async (req, res, next) => {
       userEmail,
       bookingDate,
       bookingSlot,
+      bookingTime
     });
 
     await addData.save();
@@ -51,6 +52,7 @@ export const createBooking = async (req, res, next) => {
       userEmail,
       bookingDate,
       bookingSlot,
+      bookingTime
     });
 
     await addData.save();
@@ -98,10 +100,31 @@ export const removeBooking = async (req, res, next) => {
       });
     } else {
       return res.json({
-        message: "Our cancellation policy requires a minimum one-day notice for booking deletions.",
+        message:
+          "Our cancellation policy requires a minimum one-day notice for booking deletions.",
       });
     }
   }
-
-
+  //----------------------------------------------------------------
 };
+//--------------------------------------------------------------------------------------------
+//get All booking data
+export const getAllBooking = async (req, res, next) => {
+  const { skip, limit } = pagination(req.query.page, req.query.limit);
+  let queryObj= {...req.query};
+  const execQuery = ['page','limit','skip','sort'];
+  execQuery.map( (ele)=>{
+    delete queryObj[ele];
+  })
+  queryObj = JSON.stringify(queryObj);
+  queryObj = queryObj.replace(/\b(gt|gte|lt|lte|in|nin|eq|neq)\b/g,match => `$${match}`);
+  queryObj = JSON.parse(queryObj);
+
+  const mongooseQuery =  bookingModel.find(queryObj).limit(limit).skip(skip);
+  const booking = await mongooseQuery.sort(req.query.sort?.replaceAll(',',''));
+  const count = await bookingModel.estimatedDocumentCount();
+
+  return res.status(201).json({ message: "success", count: booking.length ,total:count, page: booking.length , booking});
+ 
+};
+//----------------------------------------------------------------
