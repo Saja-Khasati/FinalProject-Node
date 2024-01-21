@@ -4,6 +4,7 @@ import AuthRouter from "./modules/Auth/auth.router.js";
 import UserRouter from "./modules/User/user.router.js";
 import bookingRouter from "./modules/Booking/booking.router.js";
 import resultRouter from "./modules/Result/result.router.js";
+import dotenv from "dotenv";
 
 const initApp = async (app, express) => {
   app.use(express.json());
