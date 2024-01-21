@@ -7,6 +7,7 @@ import resultRouter from "./modules/Result/result.router.js";
 
 const initApp = async (app, express) => {
   app.use(express.json());
+ dotenv.config();
   connectDB();
   app.get("/", (req, res) => {
     return res.status(200).json({ message: "Welcome" });
